@@ -1,5 +1,5 @@
 (def project 'com.grzm/tespresso.alpha)
-(def version "0.1.0")
+(def version "0.1.1-SNAPSHOT")
 
 (set-env! :resource-paths #{"resources" "src"}
           :dependencies   '[[adzerk/boot-test "RELEASE" :scope "test"]
