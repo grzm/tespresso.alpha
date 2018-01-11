@@ -1,4 +1,4 @@
-(ns com.grzm.tespresso.alpha.bytes
+(ns com.grzm.tespresso.bytes.alpha.impl
   (:require
    [byte-streams :as bs]
    [clojure.test :as test])
@@ -29,14 +29,11 @@
 
 (defn bytes=*
   [msg expected actual]
-  (let [passed? (bs/bytes= expected actual)]
-    (if passed?
-      (test/do-report {:type    :pass
-                       :message msg})
-      (test/do-report {:type     :fail
-                       :message  msg
-                       :expected (gather-bytes expected)
-                       :actual   (gather-bytes actual)}))))
-
-
-
+  `(let [passed?# (bs/bytes= ~expected ~actual)]
+     (if passed?#
+       {:type    :pass
+        :message ~msg}
+       {:type     :fail
+        :message  ~msg
+        :expected (gather-bytes ~expected)
+        :actual   (gather-bytes ~actual)})))

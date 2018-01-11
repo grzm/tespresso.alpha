@@ -1,92 +1,76 @@
 (ns com.grzm.tespresso.alpha
+  #?(:cljs (:require-macros [com.grzm.tespresso.alpha.cljs]))
   (:require
-   [com.grzm.tespresso.alpha.bytes :as bytes]
-   [com.grzm.tespresso.alpha.spec :as spec]
-   [com.grzm.tespresso.alpha.component :as component]
-   #?@(:cljs
-       [[cljs.test :as test :include-macros true
-         :refer-macros [is deftest testing]]])
-   #?(:clj
-      [clojure.test :as test]))
-  (:import
-   (clojure.lang ExceptionInfo)))
+   [clojure.string :as str]
+   #?(:clj [clojure.test :as test]
+      :cljs [cljs.test :as test :include-macros true])
+   [com.grzm.tespresso.alpha.impl :as impl])
+  #?(:clj
+     (:import
+      (clojure.lang ExceptionInfo))))
 
-(defmethod test/assert-expr 'com.grzm.tespresso/thrown-with-data?
-  [msg form]
-  (let [re              (nth form 1)
-        data-matches-fn (nth form 2)
-        body            (nthnext form 3)]
-    `(try ~@body
-          (test/do-report {:type     :fail
-                           :message  (str ~msg ": expected exception")
-                           :expected '~form
-                           :actual   nil})
-          (catch ExceptionInfo e#
-            (let [m# (.getMessage e#)
-                  d# (ex-data e#)]
-              (if-not (re-find ~re m#)
-                (test/do-report {:type     :fail,
-                                 :message  (str ~msg ": message doesn't match")
-                                 :expected '~form,
-                                 :actual   e#})
-                (if (~data-matches-fn d#)
-                  (test/do-report {:type     :pass
-                                   :message  ~msg
-                                   :expected '~form
-                                   :actual   e#})
-                  (test/do-report {:type     :fail
-                                   :message  (str ~msg ": data doesn't match")
-                                   :expected '~data-matches-fn
-                                   :actual   d#}))))
-            e#))))
-
-
-(defmacro defspec
-  "Based on https://gist.github.com/kennyjwilli/8bf30478b8a2762d2d09baabc17e2f10"
-  ([name sym-or-syms] `(defspec ~name ~sym-or-syms nil))
-  ([name sym-or-syms opts]
-   (when test/*load-tests*
-     `(def ~(vary-meta
-              name assoc
-              :test `(fn []
-                       (let [results#  (stest/check ~sym-or-syms ~opts)
-                             passed?# (every? nil? (map :failure results#))]
-                         (spec/report-results results#)
-                         passed?#)))
-        (fn [] (test/test-var (var ~name)))))))
-
-(defmethod test/assert-expr 'com.grzm.tespresso.spec-test/check? [msg form]
-  `(let [results# ~(second form)]
-     (spec/report-results results#)))
-
-(defn ex-data-keys= [m]
+(defn ex-data-select=
+  [m]
   #(= m (select-keys % (keys m))))
 
-(defmethod test/assert-expr 'com.grzm.tespresso/bytes=
-  [msg form]
-  `(let [expected# ~(nth form 1)
-         actual#   ~(nth form 2)]
-     (bytes/bytes=* ~msg expected# actual#)))
+(defn ex-data=
+  [m]
+  #(= m %))
 
+#?(:clj
+   (defmethod test/assert-expr 'com.grzm.tespresso/thrown-with-data?
+     [msg form]
+     `(dorun
+        (map test/do-report
+             ~(impl/thrown-with-data? msg form 'clojure.lang.ExceptionInfo))))
+   :cljs
+   (when (exists? js/cljs.test$macros)
+     (defmethod js/cljs.test$macros.assert_expr 'com.grzm.tespresso/thrown-with-data?
+       [_ msg form]
+       `(dorun
+          (map test/do-report
+               ~(impl/thrown-with-data? msg form 'cljs.core/ExceptionInfo))))))
 
-(defmacro with-system
-  "Wraps a test body and handles starting and stopping the system for the
-   test. Wraps the test body in a try-finally block to ensure the system
-   stops cleanly, isolating the test and allowing other tests to run."
-  [system-var init-fn & body]
-  (list 'do
-        (list `component/go system-var init-fn)
-        (list 'try (cons 'do body)
-              (list 'finally (list `component/stop system-var)))))
+#?(:clj
+   (defmethod test/assert-expr 'com.grzm.tespresso/lines-match?
+     [msg form]
+     `(test/do-report ~(impl/lines-match? msg form)))
+   :cljs
+   (when (exists? js/cljs.test$macros)
+     (defmethod js/cljs.test$macros.assert_expr 'com.grzm.tespresso/lines-match?
+       [_ msg form]
+       `(test/do-report ~(impl/lines-match? msg form)))))
 
-(defmacro with-system-options
-  "Wraps a test body and handles starting and stopping the system for the
-   test. Wraps the test body in a try-finally block to ensure the system
-   stops cleanly, isolating the test and allowing other tests to run."
-  [system-var init-fn teardown-fn & body]
-  (list 'do
-        (list `component/go system-var init-fn)
-        (list 'try (cons 'do body)
-              (list 'finally
-                    (list `component/stop system-var)
-                    (list teardown-fn)))))
+(declare ^:dynamic *report*)
+
+(defn capturing-report [reports m]
+  (swap! reports conj m)
+  (*report* m))
+
+(defn capture-test-var
+  "Returns map of :reports, :report-counters, :out, and :test-out."
+  [v]
+  (let [reports (atom [])]
+    (binding [*report*    test/report
+              test/report (partial capturing-report reports)]
+      #?(:clj
+         (binding [test/*report-counters*  (ref test/*initial-report-counters*)
+                   test/*test-out*         (java.io.StringWriter.)
+                   test/*testing-contexts* (list)
+                   test/*testing-vars*     (list)]
+           (let [out (with-out-str (test/test-var v))]
+             {:reports         @reports
+              :report-counters @test/*report-counters*
+              :out             out
+              :test-out        (str test/*test-out*)}))
+         :cljs
+         (binding [test/*current-env* (test/empty-env)]
+           (let [out (with-out-str (test/test-var v))]
+             ;; cljs.test doesn't distinguish between *out* and *test-out*
+             {:reports         @reports
+              :report-counters (:report-counters test/*current-env*)
+              :out             out
+              :test-out        out}))))))
+
+(defn test-ns-interns-sans-meta-key [interns k]
+  (test/test-vars (impl/tests-sans-meta-key interns k)))

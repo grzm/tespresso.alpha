@@ -2,13 +2,11 @@
 (def version "0.1.1-SNAPSHOT")
 
 (set-env! :resource-paths #{"resources" "src"}
-          :dependencies   '[[adzerk/boot-test "RELEASE" :scope "test"]
-                            [byte-streams "0.2.3"]
-                            [com.stuartsierra/component "0.3.2"]
-                            [org.clojure/clojure "RELEASE"]
-                            [org.clojure/spec.alpha "0.1.123" :scope "test"]
-                            [org.clojure/tools.logging "0.4.0" :scope "test"]
-])
+          :dependencies   '[[crisptrutski/boot-cljs-test "0.3.5-SNAPSHOT" :scope "test"]
+                            [metosin/boot-alt-test "0.3.2" :scope "test"]
+                            [seancorfield/boot-tools-deps "0.1.4" :scope "test"
+                             :exclusions [ch.qos.logback/logback-classic
+                                          org.clojure/clojure]]])
 
 (task-options!
  pom {:project     project
@@ -19,9 +17,26 @@
       :license     {"MIT"
                     "https://opensource.org/licenses/MIT"}})
 
+(require '[boot-tools-deps.core :refer [deps]])
+
 (deftask build
   "Build and install the project locally."
   []
-  (comp (pom) (aot) (jar) (install)))
+  (comp (deps) (pom) (aot) (jar) (install)))
 
-(require '[adzerk.boot-test :refer [test]])
+(require '[metosin.boot-alt-test :as boot-alt-test])
+
+(deftask alt-test
+  []
+  (comp (deps :aliases [:test])
+        (boot-alt-test/alt-test :filter 'com.grzm.tespresso-test/exclude-capture)))
+
+(require '[crisptrutski.boot-cljs-test :as boot-cljs-test])
+(task-options!
+  boot-cljs-test/test-cljs
+  {:ids ["com/grzm/tespresso/tespresso_test_suite"]
+   :js-env :node})
+(deftask test-cljs
+  []
+  (comp (deps :aliases [:test])
+        (boot-cljs-test/test-cljs)))

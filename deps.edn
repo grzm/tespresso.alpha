@@ -1,0 +1,9 @@
+{:deps    {byte-streams               {:mvn/version "0.2.3"}
+           com.stuartsierra/component {:mvn/version "0.3.2"}
+           org.clojure/spec.alpha     {:mvn/version "0.1.123"}
+           org.clojure/tools.logging  {:mvn/version "0.4.0"}}
+ :paths   ["src"]
+ :aliases {:test
+           {:extra-paths ["test/src" "test/doo"]
+            :extra-deps  {org.clojure/test.check    {:mvn/version "0.10.0-alpha2"}
+                          org.clojure/clojurescript {:mvn/version "1.9.946"}}}}}
