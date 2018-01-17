@@ -1,5 +1,5 @@
 (def project 'com.grzm/tespresso.alpha)
-(def version "0.1.1-SNAPSHOT")
+(def version "0.1.3")
 
 (set-env! :resource-paths #{"resources" "src"}
           :dependencies   '[[crisptrutski/boot-cljs-test "0.3.5-SNAPSHOT" :scope "test"]
