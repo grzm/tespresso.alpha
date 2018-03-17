@@ -2,7 +2,7 @@
 (def version "0.1.4-SNAPSHOT")
 
 (set-env! :resource-paths #{"resources" "src"}
-          :dependencies   '[[adzerk/bootlaces "0.1.13"]
+          :dependencies   '[[adzerk/bootlaces "0.1.13" :scope "test"]
                             [crisptrutski/boot-cljs-test "0.3.5-SNAPSHOT" :scope "test"]
                             [metosin/boot-alt-test "0.3.2" :scope "test"]
                             [seancorfield/boot-tools-deps "0.1.4" :scope "test"
