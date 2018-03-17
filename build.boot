@@ -2,11 +2,13 @@
 (def version "0.1.4-SNAPSHOT")
 
 (set-env! :resource-paths #{"resources" "src"}
-          :dependencies   '[[crisptrutski/boot-cljs-test "0.3.5-SNAPSHOT" :scope "test"]
+          :dependencies   '[[adzerk/bootlaces "0.1.13"]
+                            [crisptrutski/boot-cljs-test "0.3.5-SNAPSHOT" :scope "test"]
                             [metosin/boot-alt-test "0.3.2" :scope "test"]
                             [seancorfield/boot-tools-deps "0.1.4" :scope "test"
                              :exclusions [ch.qos.logback/logback-classic
-                                          org.clojure/clojure]]])
+                                          org.clojure/clojure]]]
+          :repositories [["clojars" {:url "https://clojars.org/repo/"}]])
 
 (task-options!
  pom {:project     project
@@ -40,3 +42,6 @@
   []
   (comp (deps :aliases [:test])
         (boot-cljs-test/test-cljs)))
+
+(require '[adzerk.bootlaces :refer [build-jar bootlaces! push-snapshot push-release]])
+(bootlaces! version)
