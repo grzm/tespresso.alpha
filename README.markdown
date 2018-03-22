@@ -4,6 +4,38 @@ Test with a little caffeine.
 
 Tespresso is a collection of `clojure.test` helpers.
 
+## Releases and Dependency Information
+
+Releases are on [Clojars](https://clojars.org/com.grzm/tespresso.alpha).
+
+### Clojure [CLI/deps.edn][deps] coordinates:
+
+```clojure
+{com.grzm/tespresso.alpha {:mvn/version "0.1.8"}}
+```
+
+### [Leiningen][]/[Boot][] dependency information:
+
+```clojure
+[com.grzm/tespresso.alpha "0.1.8"]
+```
+
+### [Maven] dependency information:
+
+```xml
+<dependency>
+  <groupId>com.grzm</groupId>
+  <artifactId>tespresso.alpha</artifactId>
+  <version>0.1.8</version>
+</dependency>
+```
+
+[deps]: https://clojure.org/reference/deps_and_cli
+[Leiningen]: http://leiningen.org/
+[Boot]: http://boot-clj.com
+[Maven]: http://maven.apache.org/
+
+
 ## Usage
 
 ### Clojure Spec helpers
