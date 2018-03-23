@@ -11,13 +11,13 @@ Releases are on [Clojars](https://clojars.org/com.grzm/tespresso.alpha).
 ### Clojure [CLI/deps.edn][deps] coordinates:
 
 ```clojure
-{com.grzm/tespresso.alpha {:mvn/version "0.1.8"}}
+{com.grzm/tespresso.alpha {:mvn/version "0.1.11"}}
 ```
 
 ### [Leiningen][]/[Boot][] dependency information:
 
 ```clojure
-[com.grzm/tespresso.alpha "0.1.8"]
+[com.grzm/tespresso.alpha "0.1.11"]
 ```
 
 ### [Maven] dependency information:
@@ -26,7 +26,7 @@ Releases are on [Clojars](https://clojars.org/com.grzm/tespresso.alpha).
 <dependency>
   <groupId>com.grzm</groupId>
   <artifactId>tespresso.alpha</artifactId>
-  <version>0.1.8</version>
+  <version>0.1.11</version>
 </dependency>
 ```
 
